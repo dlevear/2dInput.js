@@ -1,0 +1,104 @@
+<html>
+
+<head>
+  <style>
+    body {
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="2dInput" width="250" height="250" style="vertical-align:middle; touch-action: none;"></canvas>
+  <canvas id="arms" width="200" height="200" style="vertical-align:middle; touch-action: none;"></canvas>
+</body>
+
+<script src="2dInput.js"> </script>
+<script src="robot_arms.js"> </script>
+<script>
+  inputCanvas = document.getElementById('2dInput');
+  G = new grid(inputCanvas);
+  G.attach_events();
+  G.gridLeft = 30;
+  G.gridRight = parseInt(inputCanvas.style.width) - 40;
+  G.gridTop = 30;
+  G.gridBottom = parseInt(inputCanvas.style.height) - 40;
+  G.xChoice = 0.5;
+  G.yChoice = 0.393; // (pi/4) / 2
+  G.xLabels = ['0', '', '1', '', '2'];
+  G.yLabels = ['0', '', '', '', ''];
+  G.xSliderLabel = 'L';
+  G.sliderLabelFont = "bold 16px Didact Gothic"; // font for slider ball labels
+  G.sliderLabelFontColor = "white" ; // color font for slider ball labels
+  G.ySliderLabel = '\u03B8';
+  G.sliderBallRadius = 9;
+  G.sliderBallColor = '#458a49';                  
+  G.sliderCircleColor = '#458a49';
+  G.draw();
+
+  function draw_extra_yLabels() {
+    const fontSize = 12;
+    G.ctx.font = G.ticksFont;
+    G.ctx.textAlign = 'left';
+    G.ctx.textBaseline = 'middle';
+    G.ctx.fillStyle = 'black';
+    var heightPiOver4 = G.gridBottom - Math.PI/4 * (G.gridBottom-G.gridTop)/2;
+    var heightPiOver2 = G.gridBottom - Math.PI/2 * (G.gridBottom-G.gridTop)/2;
+    G.ctx.fillText('\u03c0/4', G.gridRight + fontSize/2, heightPiOver4);
+    G.ctx.fillText('\u03c0/2', G.gridRight + fontSize/2, heightPiOver2);
+    G.ctx.strokeStyle = 'black';
+    G.ctx.lineWidth = 1;
+    G.ctx.beginPath();
+    G.ctx.moveTo(G.gridRight-fontSize/4, heightPiOver4);
+    G.ctx.lineTo(G.gridRight+fontSize/4, heightPiOver4);
+    G.ctx.stroke();
+    G.ctx.moveTo(G.gridRight-fontSize/4, heightPiOver2);
+    G.ctx.lineTo(G.gridRight+fontSize/4, heightPiOver2);
+    G.ctx.stroke();
+  }
+  
+
+  armCanvas = document.getElementById('arms');
+  A = new arms(armCanvas);
+  A.arm1left = 30;
+  A.arm1top = parseInt(armCanvas.style.height) - 30;
+  A.pixelsPerX = 40;
+  A.pixelsPerY = A.pixelsPerX;
+  A.arm2width = A.pixelsPerX*Math.sqrt(2);
+  A.arm1angle = 0;
+  A.angle1LabelText = '';
+  A.angle2LabelText = '';
+  A.angleLabelPadding = -30;
+  A.arm1weight = 7;
+  A.arm2weight = 7;
+  function xChoice_to_length(xChoice) {
+    return xChoice*(2)*A.pixelsPerX;
+  }
+  function yChoice_to_angle(yChoice) {
+    return yChoice*2;
+  }
+  A.arm1width = xChoice_to_length(G.xChoice);
+  A.arm2angle = yChoice_to_angle(G.yChoice);
+  var currentXChoice = G.xChoice;
+  var currentYChoice = G.yChoice;
+  A.draw();
+  function update() {
+    if (G.xChoice != currentXChoice || G.yChoice != currentYChoice) {
+      A.arm1width = xChoice_to_length(G.xChoice);
+      A.arm2angle = yChoice_to_angle(G.yChoice);
+      A.draw();
+    }
+    currentXChoice = G.xChoice;
+    currentYChoice = G.yChoice;
+
+    G.draw();
+    draw_extra_yLabels(); //must be recalled since G will overdraw itself
+  };
+  update();
+  window.addEventListener('mousemove', update);
+  window.addEventListener('mousedown', update);
+  window.addEventListener('touchstart', update);
+  window.addEventListener('touchmove', update);
+</script>
+
+</html>

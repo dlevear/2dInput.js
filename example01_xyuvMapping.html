@@ -1,0 +1,262 @@
+<html>
+
+<head>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script> 
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$','$']]
+      }
+    }
+  </script>
+  <style>
+    body {
+      text-align:center;
+    }
+
+    .matrix {
+      border-left: 4px solid black;
+      border-right: 4px solid black;
+      border-top-left-radius: 1em;
+      border-top-right-radius: 1em;
+      border-bottom-left-radius: 1em;
+      border-bottom-right-radius: 1em;
+      display:inline-block;
+      vertical-align:middle;
+    }
+
+    .matrix td {
+      color:black;
+      padding:10px;
+      font-size:24px;
+      text-align: right;
+    }
+
+  </style>
+
+</head>
+
+<body>
+  <table style="margin-left:auto; margin-right:auto; ">
+  <tr>
+    <td style="vertical-align:middle">
+    <center>
+      <table class="matrix">
+        <tr><td>$u$</td></tr>
+        <tr><td>$v$</td></tr>
+        </table>
+        $=$
+        <table class="matrix numerical">
+        <tr><td>$3$</td><td>$-2$</td></tr>
+        <tr><td>$1$</td><td>$1 $</td></tr>
+        </table>
+        <table class="matrix">
+        <tr><td>$x$</td></tr>
+        <tr><td>$y$</td></tr>
+      </table>
+    </center>
+    </td> 
+  </td>
+  <td rowspan="2"> <canvas id="arms" width="500" height="500" style="vertical-align:middle; touch-action: none;"></canvas> </td> 
+  </tr>
+  <tr> <td style="vertical-align:bottom"> <canvas id="2dInput" width="250" height="250" style="vertical-align:middle; touch-action: none;"></canvas> </td> </tr>
+  </table>
+</body>
+
+<script src="2dInput.js"> </script>
+<script>
+  inputCanvas = document.getElementById('2dInput');
+  G = new grid(inputCanvas);
+  G.attach_events();
+  G.gridLeft = 30;
+  G.gridRight = parseInt(inputCanvas.style.width) - 40;
+  G.gridTop = 30;
+  G.gridBottom = parseInt(inputCanvas.style.height) - 40;
+  G.xChoice = 0.5;
+  G.yChoice = 0.5; 
+  G.xLabels = ['', '-1', '', '0', '', '1', ''];
+  G.yLabels = ['', '-1', '', '0', '', '1', ''];
+  G.xSliderLabel = 'X';
+  G.xSliderBallColor = 'blue';                  
+  G.xSliderCircleColor = 'blue';               
+  G.sliderLabelFont = "bold 16px Georgia"; // font for slider ball labels
+  G.sliderLabelFontColor = "white" ; // color font for slider ball labels
+  G.ySliderLabel = 'Y';
+  G.sliderBallRadius = 9;
+  G.sliderBallColor = 'blue';                  
+  G.sliderCircleColor = 'blue';
+  G.draw();
+
+  inputUVCanvas = document.getElementById('arms');
+  H = new grid(inputUVCanvas);
+  H.attach_events();
+  H.gridLeft = 30;
+  H.gridRight = parseInt(inputUVCanvas.style.width) - 40;
+  H.gridTop = 30;
+  H.gridBottom = parseInt(inputUVCanvas.style.height) - 40;
+  H.xChoice = 0.5;
+  H.yChoice = 0.393; 
+  H.xLabels = ['-3', '', '-2', '', '-1', '', '0', '', '1', '', '2', '', '3'];
+  H.yLabels = ['-3', '', '-2', '', '-1', '', '0', '', '1', '', '2', '', '3'];
+  H.ballColor = 'cyan';               
+  H.xSliderLabel = 'U';
+  H.sliderLabelFont = "bold 16px Georgia"; // font for slider ball labels
+  H.sliderLabelFontColor = "white" ; // color font for slider ball labels
+  H.ySliderLabel = 'V';
+  H.ySliderBallColor = 'orange';                  
+  H.ySliderCircleColor = 'orange';               
+  H.sliderBallColor = 'orange';
+  H.sliderCircleColor = 'orange';
+  H.sliderBallRadius = 9;
+
+  var currentVariables = {
+    x: G.xChoice*1.001,
+    y: G.yChoice*1.001,
+    u: H.xChoice,
+    v: H.yChoice,
+  }
+  // mult by 1.001 to intentionally force overwrite of uv
+  function overwrite_xy(xyuv) {
+    // use values of uv to overwrite values of xy
+    xyuv.x = (1/5)*xyuv.u + (2/5)*xyuv.v; 
+    xyuv.y = (-1/5)*xyuv.u + (3/5)*xyuv.v; 
+    return xyuv;
+  }
+  function overwrite_uv(xyuv) {
+    // use values of xy to overwrite values of uv
+    xyuv.u = 3*xyuv.x - 2*xyuv.y;
+    xyuv.v = xyuv.x + xyuv.y;
+    return xyuv;
+  }
+  const XYorigin = {x:0.5,y:0.5};
+  const XYscale = {x:3,y:3};
+  const UVorigin = {u:0.5,v:0.5};
+  const UVscale = {u:6,v:6};
+  function inputCoords_to_simulationCoords(xyuv) {
+    xyuv.x = (xyuv.x - XYorigin.x)*XYscale.x;
+    xyuv.y = (xyuv.y - XYorigin.y)*XYscale.y;
+    xyuv.u = (xyuv.u - UVorigin.u)*UVscale.u;
+    xyuv.v = (xyuv.v - UVorigin.v)*UVscale.v;
+    return xyuv;
+  }
+  function simulationCoords_to_inputCoords(xyuv) {
+    xyuv.x = xyuv.x/XYscale.x + XYorigin.x;
+    xyuv.y = xyuv.y/XYscale.y + XYorigin.y;
+    xyuv.u = xyuv.u/UVscale.u + UVorigin.u;
+    xyuv.v = xyuv.v/UVscale.v + UVorigin.v;
+    return xyuv;
+  }
+  function draw_parallelograms() {
+    // Major parallelogram
+    G.ctx.strokeStyle = 'blue'; 
+    G.ctx.lineWidth = 3;
+    G.ctx.fillStyle = 'rgba(100,100,100,0.5)';
+    this.help_draw_parallelogram(G, [
+      simulationCoords_to_inputCoords({x:0,y:0}),
+      simulationCoords_to_inputCoords({x:1,y:0}),
+      simulationCoords_to_inputCoords({x:1,y:1}),
+      simulationCoords_to_inputCoords({x:0,y:1}),
+    ]);
+
+    H.ctx.strokeStyle = 'blue'; 
+    H.ctx.lineWidth = 3;
+    H.ctx.fillStyle = 'rgba(100,100,100,0.5)';
+    function id(p) {
+      // because helper function uses x and y only
+      return {x:p.u,y:p.v};
+    }
+    function G_to_H(p) {
+      return id(simulationCoords_to_inputCoords(overwrite_uv(p)));
+    }
+    this.help_draw_parallelogram(H, [
+      G_to_H({x:0,y:0}),
+      G_to_H({x:1,y:0}),
+      G_to_H({x:1,y:1}),
+      G_to_H({x:0,y:1}),
+    ]);
+
+    // Minor parallelograms
+    const bigN = 8;
+    const delta = 1/bigN;
+    for (let i=0; i < bigN; i++) {
+      for (let j=0; j < bigN; j++) {
+        const x0 = 0 + i*delta;
+        const y0 = 0 + j*delta;
+        G.ctx.strokeStyle = 'rgba(100,100,100,0.5)';
+        G.ctx.lineWidth = 1;
+        G.ctx.fillStyle = 'rgba(200,200,200,0.5)';
+        this.help_draw_parallelogram(G, [
+          simulationCoords_to_inputCoords({x:x0,y:y0}),
+          simulationCoords_to_inputCoords({x:x0+delta,y:y0}),
+          simulationCoords_to_inputCoords({x:x0+delta,y:y0+delta}),
+          simulationCoords_to_inputCoords({x:x0,y:y0+delta}),
+        ]);
+        H.ctx.strokeStyle = 'rgba(100,100,100,0.5)';
+        H.ctx.lineWidth = 1;
+        H.ctx.fillStyle = 'rgba(200,200,200,0.5)';
+        this.help_draw_parallelogram(H, [
+          G_to_H({x:x0,y:y0}),
+          G_to_H({x:x0+delta,y:y0}),
+          G_to_H({x:x0+delta,y:y0+delta}),
+          G_to_H({x:x0,y:y0+delta}),
+        ]);
+      }
+    }
+  }
+  function help_draw_parallelogram(G,points) {
+    function moveCtx(ctx, p) {ctx.moveTo(p.x,p.y)}
+    function lineCtx(ctx, p) {ctx.lineTo(p.x,p.y)}
+    G.ctx.beginPath();
+    moveCtx(G.ctx, G.proportionalityCoords_to_canvasCoords(points[0]));
+    for (let i=1; i < points.length; i++) {
+      lineCtx(G.ctx, G.proportionalityCoords_to_canvasCoords(points[i]));
+    }
+    G.ctx.closePath();
+    G.ctx.fill();
+    G.ctx.stroke();
+  }
+  function update() {
+    if (G.xChoice != currentVariables.x || G.yChoice != currentVariables.y) {
+      // G has been moved
+      // Overwrite uv
+      simulationCoords_to_inputCoords(
+        overwrite_uv(
+          inputCoords_to_simulationCoords(currentVariables)
+        )
+      );
+      currentVariables.x = G.xChoice;
+      currentVariables.y = G.yChoice;
+    }
+    else if (H.xChoice != currentVariables.u || H.yChoice != currentVariables.v) {
+      // H has been moved
+      // Overwrite xy
+      simulationCoords_to_inputCoords(
+        overwrite_xy(
+          inputCoords_to_simulationCoords(currentVariables)
+        )
+      );
+      currentVariables.u = H.xChoice;
+      currentVariables.v = H.yChoice;
+    }
+
+    G.xChoice = currentVariables.x;
+    G.yChoice = currentVariables.y;
+    H.xChoice = currentVariables.u;
+    H.yChoice = currentVariables.v;
+
+    G.draw();
+    H.draw();
+    draw_parallelograms();
+    G.draw_choices();
+    H.draw_choices();
+  };
+  update();
+  window.addEventListener('mousemove', update);
+  window.addEventListener('mousedown', update);
+  window.addEventListener('touchstart', update);
+  window.addEventListener('touchmove', update);
+</script>
+
+</html>

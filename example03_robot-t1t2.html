@@ -1,0 +1,75 @@
+<html>
+
+<head>
+  <style>
+    body {
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="2dinput" width="300" height="300" style="vertical-align:middle; touch-action: none;"></canvas>
+  <canvas id="arms" width="250" height="220" style="vertical-align:middle; touch-action: none;"></canvas>
+</body>
+
+<script src="2dInput.js"> </script>
+<script src="robot_arms.js"> </script>
+<script>
+  inputCanvas = document.getElementById('2dinput');
+  G = new grid(inputCanvas);
+  G.attach_events();
+  G.gridLeft = 60;
+  G.gridRight = parseInt(inputCanvas.style.width) - 80;
+  G.gridTop = 60;
+  G.gridBottom = parseInt(inputCanvas.style.height) - 60;
+  G.xChoice = 0.25;
+  G.yChoice = 0.25;
+  G.xLabels = ['', '\u03c0/6', '2\u03c0/6', '3\u03c0/6', '4\u03c0/6', '5\u03c0/6', '\u03c0'];
+  G.yLabels = ['', '\u03c0/6', '2\u03c0/6', '3\u03c0/6', '4\u03c0/6', '5\u03c0/6', '\u03c0'];
+  G.xSliderLabel = '\u03B8\u2081';
+  G.sliderLabelFont = "bold 16px Didact Gothic"; // font for slider ball labels
+  G.sliderLabelFontColor = "white" ; // color font for slider ball labels
+  G.ySliderLabel = '\u03B8\u2082';
+  G.sliderBallRadius = 9;
+  G.sliderBallColor = '#458a49';                  
+  G.sliderCircleColor = '#458a49';                
+  G.draw();
+
+  armCanvas = document.getElementById('arms');
+  A = new arms(armCanvas);
+  A.arm1left = parseInt(armCanvas.style.width)/2;
+  A.arm1top = parseInt(armCanvas.style.height) - 70;
+  A.angle1LabelText = '\u03B8\u2081';
+  A.angle2LabelText = '\u03B8\u2082';
+  A.shouldDrawAngleLabels = true;
+  A.pixelsPerX = 55;
+  A.pixelsPerY = 55;
+  A.arm1width = 55;
+  A.arm2width = 55;
+  function xChoice_to_angle(xChoice) {
+    return xChoice*(Math.PI);
+  }
+  function yChoice_to_angle(yChoice) {
+    return yChoice*(Math.PI);
+  }
+  A.arm1angle = xChoice_to_angle(G.xChoice);
+  A.arm2angle = yChoice_to_angle(G.yChoice);
+  var currentXChoice = G.xChoice;
+  var currentYChoice = G.yChoice;
+  A.draw();
+  function update() {
+    if (G.xChoice != currentXChoice || G.yChoice != currentYChoice) {
+      A.arm1angle = xChoice_to_angle(G.xChoice);
+      A.arm2angle = yChoice_to_angle(G.yChoice);
+      A.draw();
+    }
+    currentXChoice = G.xChoice;
+    currentYChoice = G.yChoice;
+  }
+  window.addEventListener('mousemove', update);
+  window.addEventListener('touchstart', update);
+  window.addEventListener('touchmove', update);
+</script>
+
+</html>
